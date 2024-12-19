@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Animal Guessing Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            font-size: 24px;
+        }
+
+        #game-container {
+            margin-top: 30px;
+        }
+
+        #image-container {
+            display: grid;
+            grid-template-columns: repeat(3, 100px); /* 3 columns */
+            grid-template-rows: repeat(3, 100px); /* 3 rows */
+            gap: 5px;
+            margin-bottom: 20px;
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+        }
+
+        .image-frame {
+            width: 100%;
+            height: 100%;
+            background-size: 300px 300px; /* Size of the original image */
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 1s ease-in-out; /* Fade-in effect */
+        }
+
+        #controls {
+            margin-top: 20px;
+        }
+
+        #user-guess {
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        #submit-guess {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #submit-guess:hover {
+            background-color: #45a049;
+        }
+
+        #timer {
+            font-weight: bold;
+            color: red;
+        }
+
+        #play-button {
+            padding: 15px 25px;
+            font-size: 20px;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #play-button:hover {
+            background-color: #005f73;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Guess the Farm Animal</h1>
+        <p>Can you guess the animal before the picture is revealed?</p>
+    </header>
+
+    <div id="game-container">
+        <button id="play-button">Play Game</button>
+
+        <div id="image-container" style="display: none;">
+            <div class="image-frame" id="frame1"></div>
+            <div class="image-frame" id="frame2"></div>
+            <div class="image-frame" id="frame3"></div>
+            <div class="image-frame" id="frame4"></div>
+            <div class="image-frame" id="frame5"></div>
+            <div class="image-frame" id="frame6"></div>
+            <div class="image-frame" id="frame7"></div>
+            <div class="image-frame" id="frame8"></div>
+            <div class="image-frame" id="frame9"></div>
+        </div>
+
+        <div id="controls">
+            <input type="text" id="user-guess" placeholder="Guess the animal">
+            <button id="submit-guess">Submit Guess</button>
+            <p>Time remaining: <span id="timer">30</span> seconds</p>
+        </div>
+    </div>
+
+    <script>
+        // Array of possible animal images and their names (8 animals)
+        const animals = [
+            { image: 'gameimg/cow.jpg', name: 'cow' },        // Replace 'gameimg/cow.jpg' with the actual path
+            { image: 'gameimg/sheep.jpg', name: 'sheep' },    // Replace 'gameimg/sheep.jpg' with the actual path
+            { image: 'gameimg/rabbit.jpg', name: 'rabbit' },  // Replace 'gameimg/rabbit.jpg' with the actual path
+            { image: 'gameimg/goat.jpg', name: 'goat' },      // Replace 'gameimg/goat.jpg' with the actual path
+            { image: 'gameimg/horse.jpg', name: 'horse' },    // Replace 'gameimg/horse.jpg' with the actual path
+            { image: 'gameimg/duck.jpg', name: 'duck' },      // Replace 'gameimg/duck.jpg' with the actual path
+            { image: 'gameimg/pig.jpg', name: 'pig' },        // Replace 'gameimg/pig.jpg' with the actual path
+            { image: 'gameimg/chicken.jpg', name: 'chicken' } // Replace 'gameimg/chicken.jpg' with the actual path
+        ];
+
+        let timer = 30;
+        let revealedFrames = 0;
+        const maxFrames = 9;
+        let selectedAnimal;
+        let gameInterval;
+        let timerInterval;
+
+        document.getElementById("play-button").addEventListener("click", startGame);
+        document.getElementById("submit-guess").addEventListener("click", checkGuess);
+
+        // Start the game by revealing frames
+        function startGame() {
+            // Hide the play button and show the game container
+            document.getElementById("play-button").style.display = "none";
+            document.getElementById("image-container").style.display = "grid";
+
+            // Pick a random animal from the list of 8 animals
+            selectedAnimal = animals[Math.floor(Math.random() * animals.length)];
+
+            revealedFrames = 0;
+            timer = 30;
+            document.getElementById("timer").textContent = timer;
+
+            // Set the background image of the frames
+            const frames = document.querySelectorAll(".image-frame");
+            frames.forEach((frame, index) => {
+                // Divide the image into 9 parts (3x3 grid)
+                const row = Math.floor(index / 3);   // Get the row (0, 1, or 2)
+                const col = index % 3;               // Get the column (0, 1, or 2)
+                
+                // Set the background position to crop the image into smaller pieces
+                frame.style.backgroundImage = `url('${selectedAnimal.image}')`;
+                frame.style.backgroundPosition = `-${col * 100}px -${row * 100}px`;
+                frame.style.opacity = 0;
+            });
+
+            // Start the timer
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+
+            // Reveal frames at intervals
+            clearInterval(gameInterval);
+            gameInterval = setInterval(revealFrame, 3000);
+        }
+
+        // Timer countdown function
+        function updateTimer() {
+            timer--;
+            document.getElementById("timer").textContent = timer;
+
+            if (timer <= 0) {
+                clearInterval(timerInterval);
+                clearInterval(gameInterval);
+                alert("Time's up! The animal was a " + selectedAnimal.name + ". Try again.");
+                resetGame();
+            }
+        }
+
+        // Reveal one frame at a time
+        function revealFrame() {
+            if (revealedFrames < maxFrames) {
+                const frame = document.getElementById(`frame${revealedFrames + 1}`);
+                frame.style.opacity = 1; // This will trigger the fade-in effect
+                revealedFrames++;
+            } else {
+                clearInterval(gameInterval);
+            }
+        }
+
+        // Check the user's guess
+        function checkGuess() {
+            const userGuess = document.getElementById("user-guess").value.toLowerCase();
+            if (userGuess === selectedAnimal.name) {
+                alert("Correct! You guessed the animal!");
+                clearInterval(timerInterval);
+                clearInterval(gameInterval);
+                resetGame();
+            } else {
+                alert("Wrong guess. Try again!");
+            }
+        }
+
+        // Reset the game after it ends
+        function resetGame() {
+            document.getElementById("user-guess").value = "";
+            document.getElementById("play-button").style.display = "block"; // Show the play button
+            document.getElementById("image-container").style.display = "none"; // Hide the game image
+        }
+    </script>
+
+</body>
+</html>
